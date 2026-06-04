@@ -1,12 +1,12 @@
 import { defineConfig, devices } from '@playwright/test';
+import dotenv from 'dotenv';
+import path from 'path';
 
 /**
- * Read environment variables from file.
+ * Charge les variables d'environnement depuis le fichier .env (identifiants de test).
  * https://github.com/motdotla/dotenv
  */
-// import dotenv from 'dotenv';
-// import path from 'path';
-// dotenv.config({ path: path.resolve(__dirname, '.env') });
+dotenv.config({ path: path.resolve(__dirname, '.env') });
 
 /**
  * See https://playwright.dev/docs/test-configuration.
@@ -17,13 +17,20 @@ export default defineConfig({
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
-  /* Retry on CI only */
-  retries: process.env.CI ? 2 : 0,
-  /* Opt out of parallel tests on CI. */
-  workers: process.env.CI ? 1 : undefined,
+  /* Cible serverless instable sous charge : on autorise 1 retry en local
+     (2 sur CI) pour absorber les hoquets transitoires. */
+  retries: process.env.CI ? 2 : 1,
+  /* On plafonne le parallélisme : trop de workers simultanés saturent la
+     fonction serverless (cold start) et provoquent des échecs réseau. */
+  workers: process.env.CI ? 1 : 3,
   /* Plafond par test : la cible est une fonction serverless (Scaleway) dont le
      cold start, sous charge parallèle, peut dépasser le défaut de 30 s. */
   timeout: 90_000,
+  /* Timeout des assertions web-first : le défaut de 5 s est trop court après
+     un aller-retour serveur (POST d'ajout au panier, soumission de login). */
+  expect: {
+    timeout: 15_000,
+  },
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: 'html',
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
