@@ -58,14 +58,12 @@ export class HomePage {
    * n'apparaît pas dans le dropdown d'un panier vide (sinon : BasketPage.goto()).
    */
   async openBasket() {
-    await this.cartButton.click();
-    await this.viewBasketLink.click();
+    await this.openDropdownThenClick(this.cartButton, this.viewBasketLink);
   }
 
   /** Déconnecte l'utilisateur (clic sur l'email puis "Déconnexion"). */
   async logout() {
-    await this.accountEmail.click();
-    await this.logoutLink.click();
+    await this.openDropdownThenClick(this.accountEmail, this.logoutLink);
   }
 
   /**
@@ -79,5 +77,26 @@ export class HomePage {
       await this.languageSelect.selectOption('fr');
       await expect(this.languageSelect).toHaveValue('fr'); // attend le rechargement
     }
+  }
+
+  /**
+   * Ouvre un menu déroulant Bootstrap (clic sur `toggle`) puis clique `item`.
+   *
+   * Robustesse CI : sur un environnement lent, le 1er clic sur le toggle peut
+   * arriver AVANT que le JS du dropdown soit attaché -> le menu ne s'ouvre pas, et
+   * comme on ne re-clique jamais, l'item n'apparaît jamais (timeout). On attend
+   * donc le chargement complet (JS prêt), puis on re-clique le toggle tant que
+   * l'item n'est pas visible (garde `isVisible` pour ne pas refermer un menu déjà
+   * ouvert et éviter une oscillation).
+   */
+  private async openDropdownThenClick(toggle: Locator, item: Locator) {
+    await this.page.waitForLoadState('load');
+    await expect(async () => {
+      if (!(await item.isVisible())) {
+        await toggle.click();
+      }
+      await expect(item).toBeVisible({ timeout: 2000 });
+    }).toPass({ timeout: 30000 });
+    await item.click();
   }
 }
