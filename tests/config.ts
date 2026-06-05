@@ -11,6 +11,8 @@ export const BASE_URL =
 
 export const CATALOGUE_URL = `${BASE_URL}/fr/catalogue/`;
 export const PRODUCT_URL = `${BASE_URL}/fr/catalogue/i-robot_5/`;
+export const BASKET_URL = `${BASE_URL}/fr/basket/`;
+export const BASKET_API_URL = `${BASE_URL}/api/basket/`;
 
 /**
  * Identifiants d'un compte de test valide, lus à l'exécution depuis l'environnement.

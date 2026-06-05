@@ -19,7 +19,9 @@ export class ProductPage {
   constructor(page: Page) {
     this.page = page;
     this.cartButton = page.locator('li.basket-mini a.nav-link');
-    this.addToCartButton = page.getByRole('button', { name: 'Ajouter au panier' });
+    this.addToCartButton = page
+      .locator('#add_to_basket_form')
+      .getByRole('button', { name: 'Ajouter au panier' });
     this.confirmationMessage = page.getByText('a été ajouté à votre panier.');
   }
 

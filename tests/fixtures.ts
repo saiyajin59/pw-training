@@ -2,6 +2,7 @@ import { test as base } from '@playwright/test';
 import { HomePage } from './pages/HomePage';
 import { LoginPage } from './pages/LoginPage';
 import { ProductPage } from './pages/ProductPage';
+import { BasketPage } from './pages/BasketPage';
 
 /**
  * Fixtures custom : chaque Page Object est instancié automatiquement et injecté
@@ -20,6 +21,7 @@ type Pages = {
   homePage: HomePage;
   loginPage: LoginPage;
   productPage: ProductPage;
+  basketPage: BasketPage;
 };
 
 export const test = base.extend<Pages>({
@@ -31,6 +33,9 @@ export const test = base.extend<Pages>({
   },
   productPage: async ({ page }, use) => {
     await use(new ProductPage(page));
+  },
+  basketPage: async ({ page }, use) => {
+    await use(new BasketPage(page));
   },
 });
 
