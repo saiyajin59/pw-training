@@ -38,21 +38,26 @@
  *
  * VIDAGE DU PANIER VIA L'API REST (étape 3 → basketPage.emptyViaApi())
  * --------------------------------------------------------------------
- * Plutôt que de cliquer chaque bouton "Enlever" un par un, on vide le panier en
- * un seul appel : DELETE {BASE_URL}/api/basket/ (API oscarapi, montée sur le
- * MÊME host que le site web — pas sur un host séparé).
+ * Plutôt que de cliquer chaque bouton "Enlever", on vide le panier par appel API
+ * REST : DELETE {BASE_URL}/api/basket/ (oscarapi, montée sur le MÊME host que le
+ * site web — pas sur un host séparé). Stratégie à deux niveaux :
  *
- * Authentification : on N'UTILISE PAS l'auth Basic, car :
- *   - l'auth Basic cible un panier DIFFÉRENT de celui de la session navigateur ;
- *   - et dès qu'un cookie de session est présent, Django répond 403 (CSRF).
- * À la place, on réutilise la SESSION du navigateur (déjà connecté à l'étape 2) :
- * Playwright `page.request` partage les cookies du contexte, donc la requête est
- * authentifiée comme l'utilisateur connecté et cible LE BON panier — les
- * identifiants sont donc bien gérés, via le login de l'étape 2.
- * Django exige en plus, pour une requête non-sûre (DELETE) en HTTPS :
- *   - l'en-tête X-CSRFToken (valeur lue dans le cookie "csrftoken") ;
- *   - un en-tête Referer pointant vers le site.
- * Réponse de succès attendue : 207 (Multi-Status, renvoyé par oscarapi).
+ *   PLAN A — appel "simple" en authentification Basic (email:password), depuis un
+ *     contexte API NEUF SANS les cookies du navigateur. Sans cookie de session,
+ *     Django applique l'auth Basic (pas la session) -> AUCUN contrôle CSRF. C'est
+ *     l'équivalent direct du `curl --header 'authorization: Basic ...'`.
+ *
+ *   VÉRIFICATION — on recharge la page panier et on regarde s'il reste des lignes
+ *     "Enlever". Si le panier est vide, le plan A a suffi : terminé.
+ *
+ *   PLAN B (repli) — si le panier n'est PAS vide (pour une raison quelconque), on
+ *     vide via la SESSION du navigateur (déjà connecté à l'étape 2) : page.request
+ *     partage les cookies, la requête est donc authentifiée comme l'utilisateur et
+ *     cible le panier de la session. Pour un DELETE en HTTPS, Django exige alors
+ *     l'en-tête X-CSRFToken (cookie "csrftoken") + un Referer du site.
+ *
+ * Le code de réponse de chaque appel est journalisé (console.log) pour tracer ce
+ * qui s'est passé. Succès attendu : 207 (Multi-Status, oscarapi).
  * (Implémentation détaillée dans tests/pages/BasketPage.ts → emptyViaApi().)
  * ============================================================================
  */
@@ -81,8 +86,8 @@ test('le panier est conservé après déconnexion puis reconnexion', async ({
   await expect(homePage.accountEmail).toBeVisible();
   await homePage.ensureFrench();
 
-  // 3-4. Vider le panier via l'API REST (rapide, pas de clic "Enlever"), puis vérifier.
-  await basketPage.emptyViaApi();
+  // 3-4. Vider le panier via l'API REST (plan A Basic, repli plan B session+CSRF), puis vérifier.
+  await basketPage.emptyViaApi(email, password);
   await basketPage.goto();
   await expect(basketPage.removeLinks).toHaveCount(0);
   await expect(basketPage.emptyMessage).toBeVisible();
