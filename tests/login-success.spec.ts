@@ -8,9 +8,11 @@ test('connexion réussie avec des identifiants valides', async ({ homePage, logi
   await homePage.openLogin();
   await loginPage.login(email, password);
 
-  // Message de bienvenue
+  // Le compte (superuser) atterrit sur le dashboard après un login UI : le
+  // message de bienvenue y est affiché.
   await expect(homePage.welcomeMessage).toBeVisible();
 
-  // Le header affiche l'email connecté (motif générique, valable pour tout compte)
+  // On revient sur la boutique pour vérifier le header (email connecté).
+  await homePage.goto();
   await expect(homePage.accountEmail).toBeVisible();
 });

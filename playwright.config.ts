@@ -20,9 +20,11 @@ export default defineConfig({
   /* Cible serverless instable sous charge : on autorise 1 retry en local
      (2 sur CI) pour absorber les hoquets transitoires. */
   retries: process.env.CI ? 2 : 1,
-  /* On plafonne le parallélisme : trop de workers simultanés saturent la
-     fonction serverless (cold start) et provoquent des échecs réseau. */
-  workers: process.env.CI ? 1 : 3,
+  /* Exécution EN SÉRIE (workers: 1) PARTOUT : la cible serverless ne supporte pas
+     les accès concurrents (cold start + collisions de login/panier sur le compte
+     de test partagé). CI était déjà en série ; on aligne le local pour fiabiliser
+     `npx playwright test` (au prix d'une suite locale plus lente). */
+  workers: 1,
   /* Plafond par test : la cible est une fonction serverless (Scaleway) dont le
      cold start, sous charge parallèle, peut dépasser le défaut de 30 s. */
   timeout: 90_000,

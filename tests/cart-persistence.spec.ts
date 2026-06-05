@@ -80,11 +80,14 @@ test('le panier est conservé après déconnexion puis reconnexion', async ({
   await homePage.goto();
   await homePage.ensureFrench();
 
-  // 2. Connexion — puis on re-vérifie la langue (le login peut basculer en en-gb).
+  // 2. Connexion. Le compte (superuser) est redirigé vers le dashboard après un
+  //    login UI : on revient sur la boutique, on force le français, puis on
+  //    vérifie le header (email connecté).
   await homePage.openLogin();
   await loginPage.login(email, password);
-  await expect(homePage.accountEmail).toBeVisible();
+  await homePage.goto();
   await homePage.ensureFrench();
+  await expect(homePage.accountEmail).toBeVisible();
 
   // 3-4. Vider le panier via l'API REST (plan A Basic, repli plan B session+CSRF), puis vérifier.
   await basketPage.emptyViaApi(email, password);
@@ -113,12 +116,13 @@ test('le panier est conservé après déconnexion puis reconnexion', async ({
   await expect(basketPage.removeLinks).toHaveCount(0);
   await expect(basketPage.emptyMessage).toBeVisible();
 
-  // 11. Reconnexion — puis on s'assure d'être en français.
+  // 11. Reconnexion (superuser -> dashboard) : retour boutique, français, header.
   await homePage.goto();
   await homePage.openLogin();
   await loginPage.login(email, password);
-  await expect(homePage.accountEmail).toBeVisible();
+  await homePage.goto();
   await homePage.ensureFrench();
+  await expect(homePage.accountEmail).toBeVisible();
 
   // 12. Le compteur du panier affiche (1) : panier restauré.
   await expect(homePage.cartButton).toContainText('(1)');
