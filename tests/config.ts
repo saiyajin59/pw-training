@@ -13,6 +13,7 @@ export const CATALOGUE_URL = `${BASE_URL}/fr/catalogue/`;
 export const PRODUCT_URL = `${BASE_URL}/fr/catalogue/i-robot_5/`;
 export const BASKET_URL = `${BASE_URL}/fr/basket/`;
 export const BASKET_API_URL = `${BASE_URL}/api/basket/`;
+export const ADMIN_PRODUCTS_API = `${BASE_URL}/api/admin/products/`;
 
 /**
  * Identifiants d'un compte de test valide, lus à l'exécution depuis l'environnement.
@@ -29,4 +30,20 @@ export function getCredentials() {
     );
   }
   return { email, password };
+}
+
+/**
+ * Identifiants admin (superuser) pour l'API d'administration (ex. création de
+ * produits), lus depuis l'environnement. Voir .env.example.
+ */
+export function getAdminCredentials() {
+  const user = process.env.ADMIN_USER;
+  const password = process.env.ADMIN_PASSWORD;
+  if (!user || !password) {
+    throw new Error(
+      'Identifiants admin manquants : définis ADMIN_USER et ADMIN_PASSWORD ' +
+        'dans un fichier .env (voir .env.example).'
+    );
+  }
+  return { user, password };
 }
